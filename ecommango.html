@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MongoDB E-Commerce Questions</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+    h1, h2, h3 { color: #2c3e50; }
+    pre { background-color: #f4f4f4; padding: 10px; border-left: 4px solid #3498db; overflow-x: auto; }
+    code { color: #c7254e; background-color: #f9f2f4; padding: 2px 4px; border-radius: 4px; }
+    ul { margin: 10px 0; }
+    .challenge { color: #e67e22; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>MongoDB E-Commerce Dataset Questions</h1>
+  <p>This page contains a structured list of MongoDB questions, code examples, and explanations based on a YouTube-safe e-commerce dataset with 100 users. The questions are grouped by topic and difficulty level for teaching purposes.</p>
+
+  <hr>
+
+  <h2>Group 1: Basic Queries (Easy)</h2>
+  <p><strong>Objective:</strong> Learn simple <code>find()</code> queries, filtering, and projection.</p>
+
+  <ol>
+    <li>
+      <strong>Find all users from Maharashtra</strong>
+      <pre><code>db.users.find({ state: "Maharashtra" })</code></pre>
+      <p>Explanation: Filters users by state.</p>
+    </li>
+    <li>
+      <strong>Find users with billing_amount &gt; 10000</strong>
+      <pre><code>db.users.find({ billing_amount: { $gt: 10000 } })</code></pre>
+      <p>Explanation: <code>$gt</code> selects values greater than 10000.</p>
+    </li>
+    <li>
+      <strong>Show name and city for users in Delhi</strong>
+      <pre><code>db.users.find({ city: "Delhi" }, { _id: 0, name: 1, city: 1 })</code></pre>
+      <p>Explanation: Projection shows only selected fields.</p>
+    </li>
+    <li>
+      <strong>Find users whose purchase_history contains “Laptop”</strong>
+      <pre><code>db.users.find({ "purchase_history.item": "Laptop" })</code></pre>
+      <p>Explanation: Queries nested array fields.</p>
+    </li>
+    <li>
+      <strong>Find all users born after 1990</strong>
+      <pre><code>db.users.find({ dob: { $gt: "1990-01-01" } })</code></pre>
+    </li>
+    <li>
+      <strong>Find users in the city of Mumbai</strong>
+      <pre><code>db.users.find({ city: "Mumbai" })</code></pre>
+    </li>
+    <li>
+      <strong>Show name and billing_amount for users from Kerala</strong>
+      <pre><code>db.users.find({ state: "Kerala" }, { _id: 0, name: 1, billing_amount: 1 })</code></pre>
+    </li>
+  </ol>
+
+  <p class="challenge">Student Challenge: How many users are from Gujarat and purchased more than 1 item?</p>
+
+  <hr>
+
+  <h2>Group 2: Sorting & Limiting (Easy → Medium)</h2>
+  <p><strong>Objective:</strong> Learn <code>.sort()</code> and <code>.limit()</code>.</p>
+
+  <ol>
+    <li>
+      <strong>Top 5 users by billing_amount</strong>
+      <pre><code>db.users.find().sort({ billing_amount: -1 }).limit(5)</code></pre>
+    </li>
+    <li>
+      <strong>Bottom 5 users by billing_amount</strong>
+      <pre><code>db.users.find().sort({ billing_amount: 1 }).limit(5)</code></pre>
+    </li>
+    <li>
+      <strong>Sort users from Karnataka by name</strong>
+      <pre><code>db.users.find({ state: "Karnataka" }).sort({ name: 1 })</code></pre>
+    </li>
+    <li>
+      <strong>Top 3 users by billing_amount in Delhi</strong>
+      <pre><code>db.users.find({ city: "Delhi" }).sort({ billing_amount: -1 }).limit(3)</code></pre>
+    </li>
+    <li>
+      <strong>Bottom 5 users by billing_amount in Uttar Pradesh</strong>
+      <pre><code>db.users.find({ state: "Uttar Pradesh" }).sort({ billing_amount: 1 }).limit(5)</code></pre>
+    </li>
+    <li>
+      <strong>Sort all users by dob ascending</strong>
+      <pre><code>db.users.find().sort({ dob: 1 })</code></pre>
+    </li>
+  </ol>
+
+  <p class="challenge">Student Challenge: Can you sort users by city and billing_amount descending simultaneously?</p>
+
+  <hr>
+
+  <h2>Group 3: Aggregation (Medium)</h2>
+  <p><strong>Objective:</strong> Learn <code>$group</code>, <code>$sum</code>, <code>$avg</code>, <code>$match</code>, <code>$project</code>.</p>
+
+  <ol>
+    <li>
+      <strong>Total billing_amount per state</strong>
+      <pre><code>db.users.aggregate([
+  { $group: { _id: "$state", total_billing: { $sum: "$billing_amount" } } }
+])</code></pre>
+    </li>
+    <li>
+      <strong>Average billing_amount of users who purchased Electronics</strong>
+      <pre><code>db.users.aggregate([
+  { $match: { "purchase_history.category": "Electronics" } },
+  { $group: { _id: null, avg_billing: { $avg: "$billing_amount" } } }
+])</code></pre>
+    </li>
+    <li>
+      <strong>Count of users per state</strong>
+      <pre><code>db.users.aggregate([
+  { $group: { _id: "$state", total_users: { $sum: 1 } } }
+])</code></pre>
+    </li>
+    <li>
+      <strong>Total items purchased per user</strong>
+      <pre><code>db.users.aggregate([
+  { $project: { name: 1, total_items: { $sum: "$purchase_history.quantity" } } }
+])</code></pre>
+    </li>
+    <li>
+      <strong>Total revenue per category</strong>
+      <pre><code>db.users.aggregate([
+  { $unwind: "$purchase_history" },
+  { $group: { _id: "$purchase_history.category", total_revenue: { $sum: { $multiply: ["$purchase_history.price", "$purchase_history.quantity"] } } } }
+])</code></pre>
+    </li>
+    <li>
+      <strong>Top 3 categories by revenue</strong>
+      <pre><code>db.users.aggregate([
+  { $unwind: "$purchase_history" },
+  { $group: { _id: "$purchase_history.category", revenue: { $sum: { $multiply: ["$purchase_history.price","$purchase_history.quantity"] } } } },
+  { $sort: { revenue: -1 } },
+  { $limit: 3 }
+])</code></pre>
+    </li>
+  </ol>
+
+  <hr>
+
+  <h2>Group 4: Updates & Modifications (Medium)</h2>
+  <p><strong>Objective:</strong> Learn <code>$set</code>, <code>$inc</code>, <code>$mul</code>, <code>updateMany</code>.</p>
+
+  <ol>
+    <li>
+      <strong>Add a “loyalty_member” field for users with billing_amount > 15000</strong>
+      <pre><code>db.users.updateMany(
+  { billing_amount: { $gt: 15000 } },
+  { $set: { loyalty_member: true } }
+)</code></pre>
+    </li>
+    <li>
+      <strong>Increase billing_amount by 10% for Karnataka users</strong>
+      <pre><code>db.users.updateMany(
+  { state: "Karnataka" },
+  { $mul: { billing_amount: 1.1 } }
+)</code></pre>
+    </li>
+    <li>
+      <strong>Increment quantity by 1 for all Smartphone purchases</strong>
+      <pre><code>db.users.updateMany(
+  { "purchase_history.item": "Smartphone" },
+  { $inc: { "purchase_history.$.quantity": 1 } }
+)</code></pre>
+    </li>
+    <li>
+      <strong>Set vip_status for users with billing_amount > 12000</strong>
+      <pre><code>db.users.updateMany(
+  { billing_amount: { $gt: 12000 } },
+  { $set: { vip_status: true } }
+)</code></pre>
+    </li>
+  </ol>
+
+  <hr>
+
+  <h2>Group 5: Complex Array Queries (Medium → Moderate)</h2>
+  <p><strong>Objective:</strong> Learn <code>$elemMatch</code>, <code>$all</code>, <code>$unwind</code>.</p>
+
+  <ol>
+    <li>
+      <strong>Users who purchased both Electronics and Books</strong>
+      <pre><code>db.users.find({
+  purchase_history: {
+    $all: [
+      { $elemMatch: { category: "Electronics" } },
+      { $elemMatch: { category: "Books" } }
+    ]
+  }
+})</code></pre>
+    </li>
+    <li>
+      <strong>Users with any purchase over 10000</strong>
+      <pre><code>db.users.find({ "purchase_history.price": { $gt: 10000 } })</code></pre>
+    </li>
+    <li>
+      <strong>Users whose last purchase was in 2025</strong>
+      <pre><code>db.users.find({ "purchase_history.purchase_date": { $regex: "^2025" } })</code></pre>
+    </li>
+    <li>
+      <strong>Users who purchased more than 2 items of any product</strong>
+      <pre><code>db.users.find({ "purchase_history.quantity": { $gt: 2 } })</code></pre>
+    </li>
+    <li>
+      <strong>State-wise average billing_amount for Electronics buyers</strong>
+      <pre><code>db.users.aggregate([
+  { $match: { "purchase_history.category": "Electronics" } },
+  { $group: { _id: "$state", avg_billing: { $avg: "$billing_amount" } } }
+])</code></pre>
+    </li>
+  </ol>
+
+  <hr>
+
+  <h2>Group 6: Student Challenge Questions</h2>
+  <ul>
+    <li>Which state has the highest total billing_amount?</li>
+    <li>Find the user who spent the least in 2025.</li>
+    <li>Which product category generated the most revenue?</li>
+    <li>Find users who bought both Electronics and Books.</li>
+    <li>Identify users with highest single purchase (price × quantity).</li>
+    <li>List users whose billing_amount is between 5000 and 15000.</li>
+    <li>How many users have purchased more than one product category?</li>
+  </ul>
+
+  <p><em>Note:</em> All queries are based on a YouTube-safe e-commerce dataset with 100 users. This page can be used for teaching MongoDB concepts from <strong>basic queries to aggregation and updates</strong>.</p>
+
+</body>
+</html>
